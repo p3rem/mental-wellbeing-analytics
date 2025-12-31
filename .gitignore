@@ -66,8 +66,7 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
-.python-version
+# pyenv (keeping .python-version for Streamlit Cloud)
 
 # celery beat schedule file
 celerybeat-schedule
