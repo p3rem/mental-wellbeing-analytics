@@ -257,8 +257,27 @@ def load_data():
     return pd.read_csv(CSV_PATH)
 
 @st.cache_resource
+def train_models_if_missing():
+    """Train models if they don't exist (for cloud deployment)"""
+    if not os.path.exists(os.path.join(MODELS_DIR, 'rf_stress.joblib')):
+        with st.spinner("🔧 First-time setup: Training models... This may take a minute."):
+            import subprocess
+            import sys
+            result = subprocess.run([sys.executable, os.path.join(BASE_DIR, 'simple_setup.py')], 
+                                   capture_output=True, text=True, cwd=BASE_DIR)
+            if result.returncode != 0:
+                st.error(f"Model training failed: {result.stderr}")
+                return False
+        st.success("✅ Models trained successfully!")
+        st.cache_resource.clear()
+    return True
+
+@st.cache_resource
 def load_models():
     """Load trained models"""
+    # First ensure models exist
+    train_models_if_missing()
+    
     try:
         models = {}
         models['rf_stress'] = joblib.load(os.path.join(MODELS_DIR, 'rf_stress.joblib'))
@@ -275,7 +294,7 @@ def load_models():
         return models
     except FileNotFoundError as e:
         st.error(f"❌ Model files not found in: {MODELS_DIR}")
-        st.info("Please run 'python simple_setup.py' or 'python src/main_analysis.py' first")
+        st.info("Please refresh the page to retry model training.")
         return None
     except Exception as e:
         st.error(f"Error loading models: {e}")
