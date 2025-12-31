@@ -257,27 +257,26 @@ def load_data():
     return pd.read_csv(CSV_PATH)
 
 @st.cache_resource
-def train_models_if_missing():
-    """Train models if they don't exist (for cloud deployment)"""
-    if not os.path.exists(os.path.join(MODELS_DIR, 'rf_stress.joblib')):
-        with st.spinner("🔧 First-time setup: Training models... This may take a minute."):
-            import subprocess
-            import sys
+def load_models():
+    """Load trained models with automatic retraining on failure"""
+    import subprocess
+    import sys
+    
+    def run_training():
+        with st.spinner("🔧 Training models for compatibility... This may take a minute."):
             result = subprocess.run([sys.executable, os.path.join(BASE_DIR, 'simple_setup.py')], 
                                    capture_output=True, text=True, cwd=BASE_DIR)
             if result.returncode != 0:
                 st.error(f"Model training failed: {result.stderr}")
                 return False
-        st.success("✅ Models trained successfully!")
-        st.cache_resource.clear()
-    return True
+            st.success("✅ Models trained successfully!")
+            return True
 
-@st.cache_resource
-def load_models():
-    """Load trained models"""
-    # First ensure models exist
-    train_models_if_missing()
-    
+    # 1. Check if models exist, if not retrain
+    if not os.path.exists(os.path.join(MODELS_DIR, 'rf_stress.joblib')):
+        if not run_training():
+            return None
+
     try:
         models = {}
         models['rf_stress'] = joblib.load(os.path.join(MODELS_DIR, 'rf_stress.joblib'))
@@ -288,16 +287,37 @@ def load_models():
         preprocessing = joblib.load(os.path.join(MODELS_DIR, 'preprocessing.joblib'))
         models['scaler'] = preprocessing['scaler']
         models['feature_lists'] = preprocessing['feature_lists']
-        
         models['performance'] = joblib.load(os.path.join(MODELS_DIR, 'model_performance.joblib'))
-        
+
+        # 2. VALIDATION STEP: Test if models are compatible with current scikit-learn version
+        # Create a dummy input based on feature lists to test prediction
+        try:
+            # Create dummy data for stress model (first feature list)
+            stress_feats = models['feature_lists']['stress']
+            dummy_data = pd.DataFrame([np.zeros(len(stress_feats))], columns=stress_feats)
+            models['rf_stress'].predict(dummy_data)
+        except (AttributeError, ValueError, RuntimeError) as e:
+            st.warning(f"⚠️ Model compatibility issue detected ({str(e)}). Retraining models...")
+            # Delete old models to force clean slate (optional but safer)
+            # Retrain
+            if run_training():
+                # Clear cache and recurse (or just reload manually to avoid recursion depth issues)
+                st.cache_resource.clear()
+                # Reload manually
+                return load_models.__wrapped__() # Bypass cache for this retry
+            else:
+                return None
+                
         return models
-    except FileNotFoundError as e:
-        st.error(f"❌ Model files not found in: {MODELS_DIR}")
-        st.info("Please refresh the page to retry model training.")
-        return None
+
     except Exception as e:
         st.error(f"Error loading models: {e}")
+        # Try one last ditch effort to retrain if it was a loading error
+        if "No such file" not in str(e): # Avoid infinite loop if training fails
+             st.warning("Attempting to fix by retraining...")
+             if run_training():
+                 st.cache_resource.clear()
+                 return load_models.__wrapped__()
         return None
 
 def create_features(user_input):
