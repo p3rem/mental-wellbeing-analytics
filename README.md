@@ -71,7 +71,7 @@ digital-habits-mental-health/
 └── reports/
 ```
 
-## � Results & Observations
+##  Results & Observations
 
 *   Digital habits show notable correlations with mental wellbeing indicators
 *   Screen time and sleep duration are influential features in stress prediction
@@ -80,7 +80,7 @@ digital-habits-mental-health/
 
 > **Note**: The dataset and results are used for educational and training purposes only and do not represent medical or clinical conclusions.
 
-## � Getting Started
+##  Getting Started
 
 **1️⃣ Install dependencies**
 ```bash
@@ -97,7 +97,7 @@ python simple_setup.py
 streamlit run app.py
 ```
 
-## � Learning Outcomes
+##  Learning Outcomes
 
 *   Understanding of end-to-end machine learning pipelines
 *   Practical experience with supervised and unsupervised models
