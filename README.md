@@ -2,7 +2,7 @@
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://mental-wellbeing-analytics.streamlit.app/)
 
-A machine learning–based analytics project that explores the relationship between digital habits—such as screen time, social media usage, and sleep patterns—and mental wellbeing indicators including stress levels and mood scores.
+A machine learning–based analytics project that explores the relationship between digital habits such as screen time, social media usage, and sleep patterns and mental wellbeing indicators including stress levels and mood scores.
 
 **🚀 [View Live Demo](https://mental-wellbeing-analytics.streamlit.app/)**
 
@@ -107,7 +107,7 @@ streamlit run app.py
 
 ## 👥 Contributors
 
-This project was developed collaboratively as part of a Placement & Training Cell Machine Learning program during the second year of undergraduate study.
+This project was developed collaboratively as part of a Placement & Training.
 
 ## ⚠️ Disclaimer
 
